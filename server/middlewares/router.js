@@ -6,6 +6,7 @@ import sha1 from 'sha1'
 export const router = app => {
   const router = new Router()
   router.get('/wechat-hear', (ctx, next) => {
+    require('../wechat')
     console.log('Received a get request from wechat.')
     const token = config.wechat.token
     const {

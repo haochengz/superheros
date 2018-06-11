@@ -9,7 +9,8 @@
     "build": "nuxt build && backpack build",
     "start": "cross-env NODE_ENV=production node build/main.js",
     "precommit": "npm run lint",
-    "lint": "eslint --ext .js,.vue --ignore-path .gitignore ."
+    "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
+    "test": "mocha"
   },
   "dependencies": {
     "cross-env": "^5.0.1",
@@ -17,6 +18,7 @@
     "koa": "^2.4.1",
     "koa-router": "7.4.0",
     "nuxt": "latest",
+    "request-promise": "^4.2.2",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
@@ -24,15 +26,21 @@
     "babel-preset-latest-node": "0.2.2",
     "babel-preset-stage-3": "6.24.1",
     "backpack-core": "^0.3.0",
+    "chai": "^4.1.2",
     "eslint": "^4.19.1",
     "eslint-config-standard": "^10.2.1",
     "eslint-loader": "^1.9.0",
+    "eslint-plugin-chai": "^0.0.1",
     "eslint-plugin-html": "^4.0.3",
     "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-mocha": "^5.0.0",
     "eslint-plugin-node": "^4.2.2",
     "eslint-plugin-promise": "^3.4.0",
     "eslint-plugin-standard": "^3.0.1",
+    "mocha": "^5.2.0",
+    "mongoose": "^5.1.4",
     "nodemon": "^1.11.0",
+    "request": "^2.87.0",
     "scmp": "^2.0.0",
     "sha1": "^1.1.1"
   }
