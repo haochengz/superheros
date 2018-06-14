@@ -26,10 +26,8 @@ export const router = app => {
       ctx.body = 'failed'
     }
   })
-  router.post('/wechar-hear', (ctx, next) => {
-    //
-  })
 
-  app.use(router.routes())
-  app.use(router.allowedMethods())
+  app
+    .use(router.routes())
+    .use(router.allowedMethods())
 }

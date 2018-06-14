@@ -20,9 +20,9 @@ class Server {
 
   useMiddlewares(app) {
     return R.map(R.compose(
-      R.map(i => i(app)),
+      R.map(init => init(app)),
       require,
-      i => `${r('./middlewares')}/${i}`
+      path => `${r('./middlewares')}/${path}`
     ))
   }
 

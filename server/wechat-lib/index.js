@@ -1,10 +1,13 @@
 
 import request from 'request-promise'
 
-const urlPrefix = 'https://api.weixin.qq.com/cgi-bin/'
-const api = {
-  url: urlPrefix + 'token?grant_type=client_credential'
-  // https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
+const getTokenURLPrefix = 'https://api.weixin.qq.com/cgi-bin/'
+const getTokenAPI = {
+  url: getTokenURLPrefix + 'token?grant_type=client_credential'
+  /*
+  https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
+  fetch access token at this url
+  */
 }
 
 export default class Wechat {
@@ -48,9 +51,11 @@ export default class Wechat {
 
   async updateAccessToken() {
     console.log('updating access token from wechat server')
-    const url = api.url + '&appid=' + this.appID + '&secret=' + this.appSecret
+    const url = getTokenAPI.url + '&appid=' + this.appID + '&secret=' + this.appSecret
     const data = await this.request({url: url})
+    console.log('setting a new expire time for the token')
     const expiresIn = (new Date().getTime()) + (7200 * 1000)
+    console.log(expiresIn)
     // expires two hours later
     data.expiresIn = expiresIn
     return data
@@ -60,13 +65,14 @@ export default class Wechat {
     console.log('checking access token')
     if (
       !token ||
-      !token.saveAccessToken ||
-      !token.expiresIn ||
-      token.expiresIn >= (new Date().getTime())
+      !token.token ||
+      !token.expiresIn
     ) {
-      console.log('access token is not valid')
       return false
     }
-    return true
+    console.log('NOW: ' + (new Date().getTime()))
+    console.log('EXP: ' + token.expiresIn)
+    console.log('Hours to expire: ' + ((new Date().getTime()) - token.expiresIn) / (1000 * 60 * 60))
+    return token.expiresIn < (new Date().getTime())
   }
 }
