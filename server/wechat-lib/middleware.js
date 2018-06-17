@@ -11,14 +11,10 @@ export default function (options, reply) {
       timestamp,
       echostr
     } = ctx.query
-    console.log('token: ', token)
-    console.log('timestamp: ', timestamp)
-    console.log('nonce: ', nonce)
 
     const str = [token, timestamp, nonce].sort().join('')
     const sha = sha1(str)
 
-    console.log('Step into wechat middleware')
     if (ctx.method === 'GET') {
       if (sha === signature) {
         ctx.body = echostr
@@ -29,21 +25,27 @@ export default function (options, reply) {
       }
     } else {
       if (sha !== signature) {
-        console.log('verification failed')
         ctx.body = 'Failed'
         return false
       }
     }
 
-    console.log('a post request and pass verification')
     const data = await getRawBody(ctx.req, {
       length: ctx.length,
       limit: '1mb',
       encoding: ctx.charset
     })
 
+    console.log('Raw data: ')
+    console.log(data)
     const content = await util.parseXML(data)
+    console.log('Typeof: ' + typeof content)
+    console.log('Parse: ')
+    console.log(content)
+    console.log(content.xml)
     const message = util.formatMessage(content.xml)
+    console.log('message:')
+    console.log(message)
 
     ctx.weixin = message
 
@@ -56,8 +58,6 @@ export default function (options, reply) {
     ctx.status = 200
     ctx.type = 'application/xml'
     ctx.body = xml
-    console.log('wechat middleware finish')
-    console.log(ctx.body)
     return true
   }
 }

@@ -4,6 +4,12 @@
   "description": "Nuxt.js project",
   "author": "haochengz <haochengzhao@outlook.com>",
   "private": true,
+  "babel": {
+    "presets": [
+      "stage-3",
+      "latest"
+    ]
+  },
   "scripts": {
     "dev": "nodemon -w ./server -w ./start.js --exec node ./start.js",
     "build": "nuxt build && backpack build",
@@ -22,9 +28,12 @@
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
+    "babel-core": "^6.26.3",
     "babel-eslint": "^7.1.1",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-latest": "^6.24.1",
     "babel-preset-latest-node": "0.2.2",
-    "babel-preset-stage-3": "6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
     "babel-register": "^6.26.0",
     "backpack-core": "^0.3.0",
     "chai": "^4.1.2",
@@ -47,6 +56,9 @@
     "request": "^2.87.0",
     "scmp": "^2.0.0",
     "sha1": "^1.1.1",
+    "sinon": "^6.0.0",
+    "sinon-chai": "^3.2.0",
+    "sinon-mocha": "^0.0.3",
     "xml2js": "^0.4.19"
   }
 }

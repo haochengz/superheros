@@ -1,11 +1,16 @@
 
-// const tip = `中文, English, 链接: <a href="http://www.google.com">点这里</a>`
-
 export default async (ctx, next) => {
   const message = ctx.weixin
-  console.log(message)
 
-  if (message.MsgType === 'text') {
+  if (message.MsgType === 'event') {
+    if (message.Event === 'subscribe') {
+      ctx.body = 'Welcome and Thank You'
+    } else if (message.Event === 'unsubscribe') {
+      console.log('取消关注: ' + message.FromUserName)
+    } else if (message.Event === 'LOCATION') {
+      ctx.body = message.Latitude + ' : ' + message.Longitude
+    }
+  } else if (message.MsgType === 'text') {
     ctx.body = message.Content
   } else if (message.MsgType === 'image') {
     ctx.body = {

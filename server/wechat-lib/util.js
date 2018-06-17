@@ -20,8 +20,8 @@ function formatMessage(content) {
     const keys = Object.keys(content)
 
     for (let i = 0; i < keys.length; i++) {
-      let item = content[keys[i]]
       let key = keys[i]
+      let item = content[key]
 
       if (!(item instanceof Array) || item.length === 0) {
         continue
@@ -47,7 +47,6 @@ function formatMessage(content) {
 }
 
 function tpl(content, message) {
-  let info = {}
   let type = 'text'
 
   if (Array.isArray(content)) {
@@ -59,7 +58,7 @@ function tpl(content, message) {
   if (content && content.type) {
     type = content.type
   }
-  info = Object.assign({}, {
+  let info = Object.assign({}, {
     content: content,
     createTime: new Date().getTime(),
     type: type,

@@ -1,7 +1,9 @@
 
 # --require should
+# --require babel-polyfill
 --reporter dot
 --require babel-register
 # --require babel-core/register
+# --compilers js:babel-core/register
 --ui bdd
 --recursive
