@@ -60,7 +60,33 @@ TokenSchema.statics = {
     await token.save()
     return data
   },
-  async updateAccessToken() {}
+  async getTicket() {
+    const ticket = await this.findOne({
+      name: 'ticket'
+    }).exec()
+    if (ticket && ticket.token) {
+      ticket.accessToken = ticket.token
+    }
+    return ticket
+  },
+  async saveTicket(data) {
+    let ticket = await this.findOne({
+      name: 'ticket'
+    }).exec()
+
+    if (ticket && 'ticket' in data) {
+      ticket.token = data.ticket
+      ticket.expiresIn = data.expiresIn
+    } else {
+      ticket = new Token({
+        name: 'ticket',
+        token: data.ticket,
+        expiresIn: data.expiresIn
+      })
+    }
+    await ticket.save()
+    return data
+  }
 }
 
 const Token = mongoose.model('Token', TokenSchema)

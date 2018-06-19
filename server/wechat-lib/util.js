@@ -1,5 +1,6 @@
 import template from './template'
 import xml2js from 'xml2js'
+import sha1 from 'sha1'
 
 function parseXML(xml) {
   return new Promise((resolve, reject) => {
@@ -69,8 +70,58 @@ function tpl(content, message) {
   return template(info)
 }
 
+function createNonce() {
+  return Math.random().toString(36).substr(2, 15)
+}
+
+function createTimestamp() {
+  return parseInt((new Date()).getTime() / 1000, 0) + ''
+}
+
+function raw(arg) {
+  let keys = Object.keys(arg)
+  keys = keys.sort()
+
+  let newArg = {}
+  keys.forEach(key => {
+    newArg[key.toLowerCase()] = arg[key]
+  })
+  let str = ''
+  for (let k in newArg) {
+    str += '&' + k + '=' + newArg[k]
+  }
+
+  return str.substr(1)
+}
+
+function signIt(nonce, ticket, timestamp, url) {
+  const ret = {
+    jsapi_ticket: ticket,
+    nonceStr: nonce,
+    timestamp: timestamp,
+    url: url
+  }
+  const str = raw(ret)
+  const sha = sha1(str)
+
+  return sha
+}
+
+function signature(ticket, url) {
+  const nonce = createNonce()
+  const timestamp = createTimestamp()
+  const signature = signIt(nonce, ticket, timestamp, url)
+
+  return {
+    nonceStr: nonce,
+    timestamp: timestamp,
+    signature: signature
+  }
+}
+
 export {
   parseXML,
   formatMessage,
-  tpl
+  tpl,
+  sign
 }

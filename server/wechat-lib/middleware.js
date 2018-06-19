@@ -36,16 +36,8 @@ export default function (options, reply) {
       encoding: ctx.charset
     })
 
-    console.log('Raw data: ')
-    console.log(data)
     const content = await util.parseXML(data)
-    console.log('Typeof: ' + typeof content)
-    console.log('Parse: ')
-    console.log(content)
-    console.log(content.xml)
     const message = util.formatMessage(content.xml)
-    console.log('message:')
-    console.log(message)
 
     ctx.weixin = message
 

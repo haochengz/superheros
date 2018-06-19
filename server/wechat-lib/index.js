@@ -1,34 +1,28 @@
 
 import request from 'request-promise'
-
-const getTokenURLPrefix = 'https://api.weixin.qq.com/cgi-bin/'
-const getTokenAPI = {
-  url: getTokenURLPrefix + 'token?grant_type=client_credential'
-  /*
-  https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET
-  fetch access token at this url
-  */
-}
+import api from './api'
+import fs from 'fs'
+import * as _ from 'lodash'
+import { signature } from './util'
 
 export default class Wechat {
   constructor(opts) {
     this.opts = Object.assign({}, opts)
-
     this.appID = opts.appID
     this.appSecret = opts.appSecret
     this.getAccessToken = opts.getAccessToken
     this.saveAccessToken = opts.saveAccessToken
-    console.log('Start a webchat client')
+    this.getTicket = opts.getTicket
+    this.saveTicket = opts.saveTicket
 
     this.fetchAccessToken()
+    this.fetchTicket()
   }
 
   async request(opts) {
     opts = Object.assign({}, opts, {json: true})
     try {
       const resp = await request(opts)
-      console.log('requesting for a new access token, and receives:')
-      console.log(resp)
       return resp
     } catch (error) {
       console.error(error)
@@ -36,43 +30,177 @@ export default class Wechat {
   }
 
   async fetchAccessToken() {
-    console.log('fetching access token from wechat server')
     let token = await this.getAccessToken()
-    console.log('token is: ', token)
-    if (!this.isValidAccessToken(token)) {
-      console.log('token is not valid: ', token)
+    if (!this.isValidToken(token)) {
       token = await this.updateAccessToken()
+      await this.saveAccessToken(token)
     }
-    await this.saveAccessToken(token)
-    console.log('saving the token: ', token)
-
     return token
   }
 
   async updateAccessToken() {
-    console.log('updating access token from wechat server')
-    const url = getTokenAPI.url + '&appid=' + this.appID + '&secret=' + this.appSecret
+    const url = api.token.getToken + '&appid=' + this.appID + '&secret=' + this.appSecret
     const data = await this.request({url: url})
-    console.log('setting a new expire time for the token')
-    const expiresIn = (new Date().getTime()) + (7200 * 1000)
-    console.log(expiresIn)
-    // expires two hours later
+    const expires = parseInt(data.expires_in)
+    const now = (new Date()).getTime()
+    const expiresIn = now + (expires - 1200)
     data.expiresIn = expiresIn
     return data
   }
 
-  isValidAccessToken(token) {
-    console.log('checking access token')
+  async fetchTicket() {
+    let ticket = await this.getTicket()
+    if (!this.isValid(ticket)) {
+      ticket = await this.updateTicket()
+      await this.saveTicket(ticket)
+    }
+    return ticket
+  }
+
+  async updateTicket() {
+    const url = api.ticket.getTicket + '&appid=' + this.appID + '&secret=' + this.appSecret
+    const data = await this.request({url: url})
+    const expires = parseInt(data.expires_in)
+    const now = (new Date()).getTime()
+    const expiresIn = now + (expires - 1200)
+    data.expiresIn = expiresIn
+    return data
+  }
+
+  isValidToken(token) {
     if (
       !token ||
-      !token.token ||
       !token.expiresIn
     ) {
       return false
+    } else if (!token.token || !token.ticket) {
+      return false
     }
-    console.log('NOW: ' + (new Date().getTime()))
-    console.log('EXP: ' + token.expiresIn)
-    console.log('Hours to expire: ' + ((new Date().getTime()) - token.expiresIn) / (1000 * 60 * 60))
-    return token.expiresIn < (new Date().getTime())
+    return token.expiresIn > (new Date().getTime())
+  }
+
+  async handle(operation, ...args) {
+    const token = await this.fetchAccessToken()
+    const options = this[operation](token.token, ...args)
+    const data = await this.request(options)
+    console.log('--- THE DATA ---')
+    console.log(data)
+    return data
+  }
+
+  uploadMaterial(token, type, material, permanent) {
+    let form = {}
+    let url = api.temporary.upload
+
+    if (permanent) {
+      url = api.permanent.upload
+      _.extend(form, permanent)
+    }
+    if (type === 'pic') {
+      url = api.permanent.uploadNewsPic
+    } else if (type === 'news') {
+      url = api.permanent.uploadNews
+      form = material
+    } else {
+      form.media = fs.createReadStream(material)
+    }
+
+    let uploadUrl = url + 'access_token=' + token
+    if (!permanent) {
+      uploadUrl += '&type=' + type
+    } else if (type !== 'news') {
+      form.access_token = token
+    }
+
+    const options = {
+      method: 'POST',
+      url: uploadUrl,
+      json: true
+    }
+
+    if (type === 'news') {
+      options.body = form
+    } else {
+      options.formData = form
+    }
+
+    return options
+  }
+
+  fetchMaterial(token, mediaId, type, permanent) {
+    let form = {}
+    let url = api.temporary.get
+    let options = {
+      method: 'POST'
+    }
+
+    if (permanent) {
+      url = api.permanent.get
+      form.media_id = mediaId
+      form.access_token = token
+      options.body = form
+    }
+    url += 'access_token=' + token
+    options.url = url
+    if (type === 'video') {
+      url.replace('https://', 'http://')
+    }
+    if (!permanent) {
+      url += '&media_id=' + mediaId
+    }
+
+    return options
+  }
+
+  deleteMaterial(token, mediaId) {
+    const form = {
+      media_id: mediaId
+    }
+    const url = api.permanent.delete + 'access_token=' + token + '&media_id=' + mediaId
+
+    return {
+      method: 'POST',
+      url: url,
+      body: form
+    }
+  }
+
+  updateMaterial(token, mediaId, news) {
+    const form = {
+      media_id: mediaId
+    }
+    _.extend(form, news)
+    const url = api.permanent.delete + 'access_token=' + token + '&media_id=' + mediaId
+
+    return {
+      method: 'POST',
+      url: url,
+      body: form
+    }
+  }
+
+  countMaterial(token) {
+    const url = api.permanent.count + 'access_token=' + token
+    return {
+      method: 'POST',
+      url: url
+    }
+  }
+
+  batchMaterial(token, options) {
+    options.type = options.type || 'image'
+    options.offset = options.offset || 0
+    options.count = options.count || 20
+
+    const url = api.permanent.batch + 'access_token=' + token
+    return {
+      method: 'POST',
+      url: url,
+      body: options
+    }
+  }
+
+  sign(ticket, url) {
+    return signature(ticket, url)
   }
 }
