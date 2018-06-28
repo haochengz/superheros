@@ -31,6 +31,9 @@ export default class Wechat {
 
   async fetchAccessToken() {
     let token = await this.getAccessToken()
+    if (!token) {
+      console.log('token fetching is null')
+    }
     if (!this.isValidToken(token)) {
       token = await this.updateAccessToken()
       await this.saveAccessToken(token)
@@ -50,33 +53,37 @@ export default class Wechat {
 
   async fetchTicket() {
     let ticket = await this.getTicket()
-    if (!this.isValid(ticket)) {
+    if (!this.isValidToken(ticket)) {
+      console.log('token is bad')
       ticket = await this.updateTicket()
+      console.log('WHEN feching ticket')
+      console.log(ticket)
       await this.saveTicket(ticket)
     }
     return ticket
   }
 
   async updateTicket() {
-    const url = api.ticket.getTicket + '&appid=' + this.appID + '&secret=' + this.appSecret
+    const token = this.fetchAccessToken()
+    const url = api.ticket.getTicket + '&access_token=' + token.token + '&type=jsapi'
     const data = await this.request({url: url})
-    const expires = parseInt(data.expires_in)
     const now = (new Date()).getTime()
-    const expiresIn = now + (expires - 1200)
+    const expiresIn = now + (6200 * 1000)
     data.expiresIn = expiresIn
     return data
   }
 
   isValidToken(token) {
-    if (
-      !token ||
-      !token.expiresIn
-    ) {
+    if (!token) {
+      console.log('Passing a null value to isValidToken')
+      console.log(token)
       return false
-    } else if (!token.token || !token.ticket) {
-      return false
+    } else if (!token.token) {
+      console.log('Passing a value to isValidToken without token prop')
+    } else if (!token.expiresIn) {
+      console.log('Passing a value to isValidToken without expiresIn prop')
     }
-    return token.expiresIn > (new Date().getTime())
+    return (token.expiresIn - (new Date().getTime())) > 0
   }
 
   async handle(operation, ...args) {

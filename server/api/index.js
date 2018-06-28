@@ -1,7 +1,7 @@
 
 import {
   getSignatureAsync
-} from './wechat'
+} from './signature'
 
 export {
   getSignatureAsync

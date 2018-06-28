@@ -27,7 +27,6 @@ TokenSchema.pre('save', function (next) {
 
 TokenSchema.statics = {
   async getAccessToken() {
-    console.log('looking for access token from db')
     const token = await this.findOne({
       name: 'accessToken'
     }).exec()
@@ -41,22 +40,12 @@ TokenSchema.statics = {
       name: 'accessToken'
     }).exec()
 
-    if (token) {
-      if ('accessToken' in data) {
-        token.token = data.accessToken
-      } else if ('access_token' in data) {
-        token.token = data.access_token
-      } else {
-        throw Error('Cannot find access token in response')
-      }
-      token.expiresIn = data.expiresIn
-    } else {
-      token = new Token({
-        name: 'accessToken',
-        token: data.accessToken,
-        expiresIn: data.expiresIn
-      })
+    if (!token) {
+      token = new Token()
+      token.name = 'accessToken'
     }
+    token.token = data.accessToken || data.access_token
+    token.expiresIn = data.expiresIn
     await token.save()
     return data
   },
@@ -74,16 +63,12 @@ TokenSchema.statics = {
       name: 'ticket'
     }).exec()
 
-    if (ticket && 'ticket' in data) {
-      ticket.token = data.ticket
-      ticket.expiresIn = data.expiresIn
-    } else {
-      ticket = new Token({
-        name: 'ticket',
-        token: data.ticket,
-        expiresIn: data.expiresIn
-      })
+    if (!ticket) {
+      ticket = new Token()
+      ticket.name = 'ticket'
     }
+    ticket.token = data.ticket
+    ticket.expiresIn = data.expiresIn
     await ticket.save()
     return data
   }

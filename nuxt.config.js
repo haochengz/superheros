@@ -11,6 +11,11 @@ module.exports = {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+    ],
+    script: [
+      {
+        src: 'http://res.wx.qq.com/open/js/jweixin-1.2.0.js'
+      }
     ]
   },
   /*
@@ -28,7 +33,7 @@ module.exports = {
     /*
      ** Run ESLINT on save
      */
-    extend (config, ctx) {
+    extend(config, ctx) {
       if (ctx.isClient) {
         config.module.rules.push({
           enforce: 'pre',

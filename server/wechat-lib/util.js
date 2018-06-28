@@ -123,5 +123,5 @@ export {
   parseXML,
   formatMessage,
   tpl,
-  sign
+  signature
 }
